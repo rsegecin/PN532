@@ -737,7 +737,7 @@ bool PN532::inDataExchange(uint8_t *send, uint8_t sendLength, uint8_t *response,
             peer acting as card/responder.
 */
 /**************************************************************************/
-bool PN532::inListPassiveTarget()
+int16_t PN532::inListPassiveTarget()
 {
     pn532_packetbuffer[0] = PN532_COMMAND_INLISTPASSIVETARGET;
     pn532_packetbuffer[1] = 1;
@@ -745,22 +745,23 @@ bool PN532::inListPassiveTarget()
 
     DMSG("inList passive target\n");
 
-    if (HAL(writeCommand)(pn532_packetbuffer, 3)) {
-        return false;
+    int16_t status = HAL(writeCommand)(pn532_packetbuffer, 3);
+    if (status) {
+        return status;
     }
 
-    int16_t status = HAL(readResponse)(pn532_packetbuffer, sizeof(pn532_packetbuffer), 30000);
+    status = HAL(readResponse)(pn532_packetbuffer, sizeof(pn532_packetbuffer), 100);
     if (status < 0) {
-        return false;
+        return status;
     }
 
     if (pn532_packetbuffer[0] != 1) {
-        return false;
+        return 0;
     }
 
     inListedTag = pn532_packetbuffer[1];
 
-    return true;
+    return 1;
 }
 
 int8_t PN532::tgInitAsTarget(const uint8_t* command, const uint8_t len, const uint16_t timeout){
